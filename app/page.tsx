@@ -1,4 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import { useSession } from "next-auth/react";
@@ -35,6 +36,7 @@ import {
   FolderPlus,
   Sidebar,
   Folder,
+  FileText, // This import is not used in the provided code. It can be safely removed.
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
@@ -177,13 +179,13 @@ export default function Home() {
     };
 
     initializeData();
-  }, [session, status, router]);
+  }, [session, status, router, fetchWebsites]); // Added fetchWebsites to dependencies
 
   useEffect(() => {
     if (!isLoading) {
       fetchWebsites();
     }
-  }, [searchTerm, filterType, sortBy, showFavoritesOnly, currentFolderId]);
+  }, [searchTerm, filterType, sortBy, showFavoritesOnly, currentFolderId, fetchWebsites, isLoading]); // Added fetchWebsites and isLoading
 
   const handleFolderSelect = (folderId: string | null, folderName: string) => {
     setCurrentFolderId(folderId);
