@@ -36,7 +36,7 @@ import {
   FolderPlus,
   Sidebar,
   Folder,
-  FileText, // This import is not used in the provided code. It can be safely removed.
+  // This import is not used in the provided code. It can be safely removed.
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 

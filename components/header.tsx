@@ -12,7 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Brain, LogOut, Plus, Settings, Moon, Sun, Bookmark } from "lucide-react";
+import { LogOut, Plus, Settings, Moon, Sun, Bookmark } from "lucide-react";
 import { useTheme } from "next-themes";
 
 interface HeaderProps {
