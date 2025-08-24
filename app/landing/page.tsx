@@ -1,11 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { signIn } from "next-auth/react";
-import { Bookmark, Loader2, ExternalLink, Folder, FileText } from "lucide-react";
+import { signIn, getSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { Bookmark, Loader2, ExternalLink, Folder, FileText, User, Shield, Sparkles } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
+import { Toaster } from "@/components/ui/toaster";
 
 export default function LandingPage() {
-  const [isLoading, setIsLoading] = useState<"signup" | "login" | null>(null);
+  const [isLoading, setIsLoading] = useState<"signup" | "login" | "guest" | null>(null);
+  const [showGuestInput, setShowGuestInput] = useState(false);
+  const [guestName, setGuestName] = useState("");
+  const router = useRouter();
 
   const handleAuth = async (mode: "signup" | "login") => {
     setIsLoading(mode);
@@ -13,7 +19,57 @@ export default function LandingPage() {
       await signIn("google", { callbackUrl: "/" });
     } catch (err) {
       console.error(`${mode} error:`, err);
+      toast({
+        title: `${mode === "signup" ? "Sign up" : "Sign in"} failed`,
+        description: "There was an error. Please try again.",
+        variant: "destructive",
+      });
     } finally {
+      setIsLoading(null);
+    }
+  };
+
+  const handleGuestSignIn = async () => {
+    if (!guestName.trim()) {
+      toast({
+        title: "Name required",
+        description: "Please enter your name to continue as guest.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoading("guest");
+    try {
+      const result = await signIn("credentials", {
+        email: "guest@secondbrain.demo",
+        name: guestName.trim(),
+        isGuest: "true",
+        callbackUrl: "/",
+        redirect: false,
+      });
+
+      if (result?.error) {
+        toast({
+          title: "Guest sign in failed",
+          description: "There was an error signing in as guest. Please try again.",
+          variant: "destructive",
+        });
+      } else if (result?.ok) {
+        const session = await getSession();
+        if (session) {
+          router.push("/");
+        }
+      }
+    } 
+    // catch (error) {
+    //   toast({
+    //     title: "Guest sign in failed",
+    //     description: "There was an error signing in as guest. Please try again.",
+    //     variant: "destructive",
+    //   });
+    // }
+     finally {
       setIsLoading(null);
     }
   };
@@ -67,7 +123,7 @@ export default function LandingPage() {
           <div className="flex flex-col sm:flex-row gap-3 justify-center md:justify-start pt-2">
             <button
               onClick={() => handleAuth("signup")}
-              disabled={isLoading === "signup"}
+              disabled={isLoading === "signup" || isLoading === "login" || isLoading === "guest"}
               className="px-6 py-3 rounded-lg bg-indigo-600 text-white font-medium shadow-lg hover:bg-indigo-700 active:scale-[0.98] transition flex items-center justify-center gap-2"
             >
               {isLoading === "signup" && (
@@ -78,7 +134,7 @@ export default function LandingPage() {
 
             <button
               onClick={() => handleAuth("login")}
-              disabled={isLoading === "login"}
+              disabled={isLoading === "login" || isLoading === "signup" || isLoading === "guest"}
               className="px-6 py-3 rounded-lg border border-slate-600 text-gray-200 hover:bg-slate-800/60 active:scale-[0.98] transition flex items-center justify-center gap-2"
             >
               {isLoading === "login" && (
@@ -86,6 +142,58 @@ export default function LandingPage() {
               )}
               I already have an account
             </button>
+          </div>
+
+          {/* Guest Sign In Option */}
+          <div className="pt-4">
+            {!showGuestInput ? (
+              <button
+                onClick={() => setShowGuestInput(true)}
+                disabled={isLoading === "guest" || isLoading === "signup" || isLoading === "login"}
+                className="text-sm text-gray-400 hover:text-gray-300 transition-colors flex items-center gap-1"
+              >
+                <User className="w-4 h-4" />
+                Continue as Guest
+              </button>
+            ) : (
+              <div className="space-y-3 bg-slate-800/30 p-4 rounded-lg border border-slate-700 max-w-md">
+                <div className="flex items-center gap-2 text-sm text-slate-400">
+                  <Shield className="w-4 h-4" />
+                  <span>Demo mode - no personal data required</span>
+                </div>
+                
+                <div className="flex gap-2">
+                  <input
+                    placeholder="Enter your name..."
+                    value={guestName}
+                    onChange={(e) => setGuestName(e.target.value)}
+                    className="flex-1 px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-md text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    maxLength={50}
+                    onKeyPress={(e) => {
+                      if (e.key === "Enter") {
+                        handleGuestSignIn();
+                      }
+                    }}
+                  />
+                  <button
+                    onClick={handleGuestSignIn}
+                    disabled={isLoading === "guest" || !guestName.trim()}
+                    className="px-4 py-2 bg-slate-700/30 hover:bg-slate-700/50 text-white font-medium rounded-md transition-all duration-200 flex items-center gap-2"
+                  >
+                    {isLoading === "guest" ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      "Continue"
+                    )}
+                  </button>
+                </div>
+                
+                <div className="flex items-center justify-start space-x-2 text-xs text-slate-500">
+                  <Sparkles className="w-3 h-3" />
+                  <span>Secure authentication powered by NextAuth</span>
+                </div>
+              </div>
+            )}
           </div>
 
           <p className="text-sm text-gray-400">
@@ -213,6 +321,8 @@ export default function LandingPage() {
         <div className="absolute right-10 top-10 h-40 w-40 rounded-full bg-indigo-500/20 blur-3xl" />
         <div className="absolute left-10 bottom-10 h-40 w-40 rounded-full bg-emerald-500/20 blur-3xl" />
       </div>
+      
+      <Toaster />
     </div>
   );
 }
