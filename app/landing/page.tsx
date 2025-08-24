@@ -42,7 +42,7 @@ export default function LandingPage() {
     setIsLoading("guest");
     try {
       const result = await signIn("credentials", {
-        email: "guest@secondbrain.demo",
+        email: "guestdemo@savekar.test",
         name: guestName.trim(),
         isGuest: "true",
         callbackUrl: "/",
